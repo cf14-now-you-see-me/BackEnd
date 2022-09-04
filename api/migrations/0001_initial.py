@@ -39,13 +39,13 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('description', models.CharField(max_length=512)),
                 ('image', models.ImageField(blank=True, null=True, upload_to='images')),
-                ('place', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tourism.place')),
+                ('place', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.place')),
             ],
         ),
         migrations.AddField(
             model_name='place',
             name='tags',
-            field=models.ManyToManyField(related_name='places', to='tourism.placetag'),
+            field=models.ManyToManyField(related_name='places', to='api.placetag'),
         ),
         migrations.CreateModel(
             name='User',
