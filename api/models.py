@@ -47,3 +47,20 @@ class User(AbstractUser):
 	birth_date = models.DateField(default=timezone.now)
 	nat_id = models.IntegerField(default=0)
 	phone_number = models.IntegerField(default=0)
+	party_count = models.IntegerField(default=1)
+	bringing_child = models.BooleanField(default=False)
+
+class Reservation(models.Model):
+	CONFIRMATION_STATUS = [
+		(0, 'Waiting'),
+		(1, 'Confirmed'),
+		(2, 'Cancelled'),
+	]
+	booking_number = models.IntegerField()
+	account_id = models.IntegerField()
+	package = models.ForeignKey(Package, on_delete=models.CASCADE)
+	transaction_date = models.DateTimeField(default=timezone.now)
+	qty = models.IntegerField()
+	price_sum = models.IntegerField()
+	confirmation = models.CharField(max_length=256, null=True)
+	status = models.IntegerField(choices=CONFIRMATION_STATUS, default=0)

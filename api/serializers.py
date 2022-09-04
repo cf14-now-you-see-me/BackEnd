@@ -21,7 +21,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'url', 'username', 'email', 'password', 'profile_pic', 'nat_id', 'nationality', 'first_name', 'last_name', 'phone_number', 'birth_date']
+        fields = ['id', 'url', 'username', 'email', 'password', 'profile_pic', 'nat_id', 'nationality', 'first_name', 'last_name', 'phone_number', 'birth_date', 'party_count', 'bringing_child']
 
 class PlaceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -32,3 +32,8 @@ class PackageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Package
         fields = ['id', 'name', 'url', 'place', 'description', 'kind', 'has_tour_guide', 'available', 'opening_times', 'price']
+
+class ReservationSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['booking_number', 'account_id', 'package', 'transaction_date', 'qty', 'price_sum', 'confirmation', 'status']
