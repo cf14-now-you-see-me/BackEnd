@@ -1,5 +1,6 @@
 from .models import *
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -30,4 +31,4 @@ class PlaceSerializer(serializers.HyperlinkedModelSerializer):
 class PackageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Package
-        fields = ['id', 'name', 'place', 'description', 'kind', 'has_tour_guide', 'available', 'opening_times', 'price']
+        fields = ['id', 'name', 'url', 'place', 'description', 'kind', 'has_tour_guide', 'available', 'opening_times', 'price']

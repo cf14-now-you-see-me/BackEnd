@@ -78,7 +78,14 @@ class PlaceViewSet(viewsets.ModelViewSet):
 
         places = []
         for i in similars:
-            places.append(PlaceSerializer(i[1], context={'request': request}).data)
+            place = PlaceSerializer(i[1], context={'request': request})
+            place_data = place.data
+            packages = [PackageSerializer(j, context={'request':request}).data for j in Package.objects.filter(place=i[1])]
+            for i in packages:
+                del i['id']
+                del i['place']
+            place_data['packages'] = packages
+            places.append(place_data)
         
         return Response(places)
 
