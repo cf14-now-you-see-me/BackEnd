@@ -1,1 +1,1 @@
-web: gunicorn cf22.wsgi
+web: gunicorn backend-rewrite.wsgi
