@@ -1,34 +1,15 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-
-from .models import *
-from rest_framework import viewsets, views
-from rest_framework.decorators import action
+from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework import permissions
-from .serializers import *
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-# Create your views here.
 
-def index(request):
-    return HttpResponse("index")
+from .serializers import *
+from .models import *
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-    permission_classes = []
 
 class PlaceViewSet(viewsets.ModelViewSet):
-    queryset = Place.objects.all()
+    queryset = Place.objects.all().order_by('id')
     serializer_class = PlaceSerializer
-    permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
 
     @action(
         detail=True,
@@ -63,11 +44,11 @@ class PlaceViewSet(viewsets.ModelViewSet):
             txt = stemmer.stem(stop_remover.remove(txt))
             return txt
         
-        deskripsi = [preprocess(x['description']) for x in all_places]
+        deskripsi = [preprocess(x['long_description']) for x in all_places]
         vectorizer = TfidfVectorizer()
         X = vectorizer.fit_transform(deskripsi)
 
-        NUMBER_OF_CLUSTERS=3
+        NUMBER_OF_CLUSTERS=6
         km = KMeans(n_clusters=NUMBER_OF_CLUSTERS)
         km.fit(X)
 
@@ -83,73 +64,20 @@ class PlaceViewSet(viewsets.ModelViewSet):
         for i in similars:
             place = PlaceSerializer(i[1], context={'request': request})
             place_data = place.data
-            packages = [PackageSerializer(j, context={'request':request}).data for j in Package.objects.filter(place=i[1])]
-            for i in packages:
-                del i['id']
-                del i['place']
-            place_data['packages'] = packages
             places.append(place_data)
+        places = places[:5]
         
         return Response(places)
 
-class PackageViewSet(viewsets.ModelViewSet):
-    queryset = Package.objects.all()
-    serializer_class = PackageSerializer
-    permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
+class AmenityViewSet(viewsets.ModelViewSet):
+    queryset = Amenity.objects.all().order_by('id')
+    serializer_class = AmenitySerializer
 
-class ReservationViewSet(viewsets.ModelViewSet):
-    queryset = Reservation.objects.all()
-    serializer_class = ReservationSerializer
-    permission_classes = []
-
-class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
-    serializer_class = LoginSerializer
-    permission_classes = (permissions.AllowAny,)
-    http_method_names = ['post']
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as e:
-            raise InvalidToken(e.args[0])
-
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
-
-
-class RegistrationViewSet(viewsets.ModelViewSet, TokenObtainPairView):
-    serializer_class = RegisterSerializer
-    permission_classes = (permissions.AllowAny,)
-    http_method_names = ['post']
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-        res = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        }
-
-        return Response({
-            "user": serializer.data,
-            "refresh": res["refresh"],
-            "token": res["access"]
-        }, status=status.HTTP_201_CREATED)
-
-class RefreshViewSet(viewsets.ViewSet, TokenRefreshView):
-    permission_classes = (permissions.AllowAny,)
-    http_method_names = ['post']
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as e:
-            raise InvalidToken(e.args[0])
-
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    @action(methods=['get'], detail=False, url_path='by-place/(?P<place_id>\d+)', url_name='by_place')
+    def get_by_place(self, request, place_id, pk=None):
+        filtered = AmenitySerializer(
+            Amenity.objects.filter(near=place_id).all(),
+            many=True,
+            context={'request': request}
+        )
+        return Response(filtered.data)
